@@ -19,9 +19,8 @@ func NewHandler(urlShortenerService service.URLShortener) *Handler {
 	}
 }
 
-// RegisterHandlers регистрирует маршруты для обработки HTTP запросов
-func (h *Handler) RegisterHandlers() {
-	http.HandleFunc("/", h.handleRequest)
+func (h *Handler) RegisterHandlers(mux *http.ServeMux) {
+	mux.HandleFunc("/", h.handleRequest)
 }
 
 // handleRequest диспетчеризует запросы в зависимости от HTTP метода

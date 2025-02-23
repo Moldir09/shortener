@@ -12,10 +12,10 @@ func main() {
 	service := service.NewURLShortenerService(storage) // Создаем сервис
 	handler := handler.NewHandler(service)             // Создаем обработчик
 
-	handler.RegisterHandlers() // Регистрируем обработчики
+	mux := http.NewServeMux() // Создаем Router
+	handler.RegisterHandlers(mux)
 
-	// Запуск сервера
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8080", mux); err != nil {
 		panic(err)
 	}
 }
