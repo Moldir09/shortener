@@ -1,9 +1,9 @@
 package service
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"github.com/Moldir09/shortener.git/internal/app/storage"
-	"math/rand"
 )
 
 type URLShortener interface {
