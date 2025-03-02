@@ -49,7 +49,7 @@ func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
-	g
+
 	http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
 }
 
