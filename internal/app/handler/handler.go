@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/Moldir09/shortener.git/internal/app/service"
 	"io"
 	"net/http"
@@ -50,8 +49,8 @@ func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
-	fmt.Println("Redirecting to:", originalURL)
-	http.Redirect(w, r, originalURL, http.StatusFound)
+	g
+	http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
 }
 
 func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
