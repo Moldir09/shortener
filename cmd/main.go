@@ -8,12 +8,12 @@ import (
 )
 
 func main() {
-	storage := storage.NewInMemoryURLStore()
+	storage := storage.NewInMemoryURLStore()           // Создаем хранилище
 	service := service.NewURLShortenerService(storage) // Создаем сервис
 	handler := handler.NewHandler(service)             // Создаем обработчик
 
-	mux := http.NewServeMux()     // Создаем Router
-	handler.RegisterHandlers(mux) // Запуск сервера
+	mux := http.NewServeMux() // Создаем Router
+	handler.RegisterHandlers(mux)
 
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		panic(err)
