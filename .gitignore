@@ -21,3 +21,5 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+internal/app/handler/handler_test.go
+

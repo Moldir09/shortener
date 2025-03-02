@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/Moldir09/shortener.git/internal/app/service"
 	"io"
 	"net/http"
@@ -23,31 +24,42 @@ func (h *Handler) RegisterHandlers(mux *http.ServeMux) {
 	mux.HandleFunc("/", h.handleRequest)
 }
 
-// handleRequest диспетчеризует запросы в зависимости от HTTP метода
 func (h *Handler) handleRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodGet:
-		h.handleGet(w, r)
 	case http.MethodPost:
 		h.handlePost(w, r)
+	case http.MethodGet:
+		h.handleGet(w, r)
 	default:
-		http.Error(w, "Unsupported HTTP method", http.StatusMethodNotAllowed)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-// handleGet обрабатывает GET-запросы, извлекая данные
 func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+
 	shortURL := strings.TrimPrefix(r.URL.Path, "/")
+	if shortURL == "" {
+		http.Error(w, "URL not found", http.StatusNotFound)
+		return
+	}
 	originalURL, err := h.URLShortenerService.ResolveURL(shortURL)
 	if err != nil {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
+	fmt.Println("Redirecting to:", originalURL)
 	http.Redirect(w, r, originalURL, http.StatusFound)
 }
 
-// handlePost обрабатывает POST-запросы, создавая новые короткие URL
 func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -59,6 +71,7 @@ func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to shorten URL", http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(shortURL))
 }
