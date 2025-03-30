@@ -7,12 +7,10 @@ import (
 	"strings"
 )
 
-// Handler структура, содержащая ссылки на сервисы
 type Handler struct {
 	URLShortenerService service.URLShortener
 }
 
-// NewHandler создаёт новый экземпляр Handler с зависимостями
 func NewHandler(urlShortenerService service.URLShortener) *Handler {
 	return &Handler{
 		URLShortenerService: urlShortenerService,
