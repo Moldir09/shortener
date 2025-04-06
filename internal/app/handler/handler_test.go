@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"github.com/Moldir09/shortener.git/internal/app/service"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -24,6 +25,7 @@ func (m *mockService) ResolveURL(shortURL string) (string, error) {
 }
 
 func TestHandler_handlePost(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	type fields struct {
 		URLShortenerService service.URLShortener
 	}
@@ -58,7 +60,10 @@ func TestHandler_handlePost(t *testing.T) {
 			req := tt.setupReq()
 			rr := httptest.NewRecorder()
 
-			h.handlePost(rr, req)
+			c, _ := gin.CreateTestContext(rr)
+			c.Request = req
+
+			h.handlePost(c)
 
 			if rr.Code != tt.wantCode {
 				t.Errorf("expected status %d, got %d", tt.wantCode, rr.Code)
@@ -73,6 +78,7 @@ func TestHandler_handlePost(t *testing.T) {
 }
 
 func TestHandler_handleGet(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	type fields struct {
 		URLShortenerService service.URLShortener
 	}
@@ -101,7 +107,10 @@ func TestHandler_handleGet(t *testing.T) {
 			req := tt.setupReq()
 			rr := httptest.NewRecorder()
 
-			h.handleGet(rr, req)
+			c, _ := gin.CreateTestContext(rr)
+			c.Request = req
+
+			h.handleGet(c)
 
 			require.Equal(t, tt.wantCode, rr.Code)
 			require.Equal(t, "https://practicum.yandex.kz", rr.Header().Get("Location"))
