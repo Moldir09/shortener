@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/Moldir09/shortener.git/internal/app/service"
+	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"strings"
@@ -17,58 +18,40 @@ func NewHandler(urlShortenerService service.URLShortener) *Handler {
 	}
 }
 
-func (h *Handler) RegisterHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("/", h.handleRequest)
+func (h *Handler) RegisterRoutes(r *gin.Engine) {
+	r.GET("/:short", h.handleGet)
+	r.POST("/", h.handlePost)
 }
 
-func (h *Handler) handleRequest(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		h.handlePost(w, r)
-	case http.MethodGet:
-		h.handleGet(w, r)
-	default:
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	}
-}
+func (h *Handler) handleGet(c *gin.Context) {
 
-func (h *Handler) handleGet(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	}
+	shortURL := c.Param("short")
 
-	shortURL := strings.TrimPrefix(r.URL.Path, "/")
-	if shortURL == "" {
-		http.Error(w, "URL not found", http.StatusNotFound)
-		return
-	}
 	originalURL, err := h.URLShortenerService.ResolveURL(shortURL)
 	if err != nil {
-		http.Error(w, "URL not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "URL not found"})
 		return
 	}
 
-	http.Redirect(w, r, originalURL, http.StatusTemporaryRedirect)
+	c.Redirect(http.StatusTemporaryRedirect, originalURL)
 }
 
-func (h *Handler) handlePost(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+func (h *Handler) handlePost(c *gin.Context) {
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to read request body",
+		})
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Failed to read request body", http.StatusBadRequest)
-		return
-	}
 	originalURL := strings.TrimSpace(string(body))
 	shortURL, err := h.URLShortenerService.ShortenURL(originalURL)
 	if err != nil {
-		http.Error(w, "Failed to shorten URL", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to shorten URL"})
 		return
 	}
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(shortURL))
+
+	c.Data(http.StatusCreated, "text/plain", []byte(shortURL))
 }

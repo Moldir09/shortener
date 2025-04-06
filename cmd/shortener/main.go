@@ -4,18 +4,19 @@ import (
 	"github.com/Moldir09/shortener.git/internal/app/handler"
 	"github.com/Moldir09/shortener.git/internal/app/service"
 	"github.com/Moldir09/shortener.git/internal/app/storage"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	storage := storage.NewInMemoryURLStore()
 	service := service.NewURLShortenerService(storage) // Создаем сервис
-	handler := handler.NewHandler(service)             // Создаем обработчик
+	handler := handler.NewHandler(service)
 
-	mux := http.NewServeMux()     // Создаем Router
-	handler.RegisterHandlers(mux) // Запуск сервера
+	r := gin.Default()
 
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	handler.RegisterRoutes(r)
+	if err := r.Run(":8080"); err != nil {
 		panic(err)
 	}
+
 }
