@@ -12,12 +12,14 @@ type URLShortener interface {
 }
 
 type Service struct {
-	store storage.Storage
+	store   storage.Storage
+	baseURL string
 }
 
-func NewURLShortenerService(store storage.Storage) URLShortener {
+func NewURLShortenerService(store storage.Storage, baseURL string) URLShortener {
 	return &Service{
-		store: store,
+		store:   store,
+		baseURL: baseURL,
 	}
 }
 
@@ -26,7 +28,7 @@ func (s *Service) ShortenURL(originalURL string) (string, error) {
 	if err := s.store.Save(shortURL, originalURL); err != nil {
 		return "", err
 	}
-	return "http://localhost:8080/" + shortURL, nil
+	return s.baseURL + "/" + shortURL, nil
 }
 
 func (s *Service) ResolveURL(shortURL string) (string, error) {
