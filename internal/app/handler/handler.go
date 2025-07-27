@@ -21,6 +21,25 @@ func NewHandler(urlShortenerService service.URLShortener) *Handler {
 func (h *Handler) RegisterRoutes(r *gin.Engine) {
 	r.GET("/:short", h.handleGet)
 	r.POST("/", h.handlePost)
+	r.POST("api/shorten", h.GetShortenURL)
+}
+
+func (h *Handler) GetShortenURL(c *gin.Context) {
+	var req Response
+
+	err := c.BindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+		return
+	}
+
+	result, err := h.URLShortenerService.ShortenURL(req.URL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, Result{Result: result})
 }
 
 func (h *Handler) handleGet(c *gin.Context) {

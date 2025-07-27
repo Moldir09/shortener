@@ -14,7 +14,7 @@ import (
 type mockService struct{}
 
 func (m *mockService) ShortenURL(originalURL string) (string, error) {
-	return "short123", nil
+	return "http://localhost:8080/short123", nil
 }
 
 func (m *mockService) ResolveURL(shortURL string) (string, error) {
@@ -48,7 +48,7 @@ func TestHandler_handlePost(t *testing.T) {
 				return req
 			},
 			wantCode: http.StatusCreated,
-			wantBody: "short123",
+			wantBody: "http://localhost:8080/short123",
 		},
 	}
 	for _, tt := range tests {
@@ -118,6 +118,59 @@ func TestHandler_handleGet(t *testing.T) {
 			require.Equal(t, tt.wantCode, rr.Code)
 			require.Equal(t, "https://practicum.yandex.kz", rr.Header().Get("Location"))
 
+		})
+	}
+}
+
+func TestHandler_GetShortenURL(t *testing.T) {
+	type fields struct {
+		URLShortenerService service.URLShortener
+	}
+	type args struct {
+		c *gin.Context
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		setupReq func() *http.Request
+		wantCode int
+		wantBody string
+	}{
+		{
+			name: "valid POST request",
+			fields: fields{
+				URLShortenerService: &mockService{},
+			},
+			setupReq: func() *http.Request {
+				body := strings.NewReader(`{"url":"https://test.com"}`)
+				req := httptest.NewRequest(http.MethodPost, "/api/shorten", body)
+				req.Header.Set("Content-Type", "application/json")
+				return req
+			},
+			wantCode: http.StatusCreated,
+			wantBody: `{"result":"http://localhost:8080/short123"}`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				URLShortenerService: tt.fields.URLShortenerService,
+			}
+			req := tt.setupReq()
+			rr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(rr)
+			c.Request = req
+
+			h.GetShortenURL(c)
+
+			if rr.Code != tt.wantCode {
+				t.Errorf("expected status %d, got %d", tt.wantCode, rr.Code)
+			}
+
+			body := strings.TrimSpace(rr.Body.String())
+			if body != tt.wantBody {
+				t.Errorf("expected body '%s', got '%s'", tt.wantBody, body)
+			}
 		})
 	}
 }
