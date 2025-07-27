@@ -127,9 +127,6 @@ func TestHandler_GetShortenURL(t *testing.T) {
 	type fields struct {
 		URLShortenerService service.URLShortener
 	}
-	type args struct {
-		c *gin.Context
-	}
 	tests := []struct {
 		name     string
 		fields   fields

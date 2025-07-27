@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"github.com/Moldir09/shortener.git/internal/app/service"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -27,19 +28,22 @@ func (h *Handler) RegisterRoutes(r *gin.Engine) {
 func (h *Handler) GetShortenURL(c *gin.Context) {
 	var req Response
 
-	err := c.BindJSON(&req)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+	if err := json.NewDecoder(c.Request.Body).Decode(&req); err != nil {
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(c.Writer).Encode(gin.H{"error": "invalid JSON"})
 		return
 	}
 
 	result, err := h.URLShortenerService.ShortenURL(req.URL)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(c.Writer).Encode(gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, Result{Result: result})
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(c.Writer).Encode(Result{Result: result})
 }
 
 func (h *Handler) handleGet(c *gin.Context) {
