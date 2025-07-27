@@ -24,7 +24,10 @@ func NewURLShortenerService(store storage.Storage, baseURL string) URLShortener 
 }
 
 func (s *Service) ShortenURL(originalURL string) (string, error) {
-	shortURL := generateShortURL()
+	if short, ok := s.store.GetByOriginal(originalURL); ok {
+		return s.baseURL + "/" + short, nil
+	}
+	shortURL := s.GenerateShortURL()
 	if err := s.store.Save(shortURL, originalURL); err != nil {
 		return "", err
 	}
@@ -35,7 +38,7 @@ func (s *Service) ResolveURL(shortURL string) (string, error) {
 	return s.store.Load(shortURL)
 }
 
-func generateShortURL() string {
+func (s *Service) GenerateShortURL() string {
 	b := make([]byte, 6) // Генерируем 6 байт случайных данных
 	_, err := rand.Read(b)
 	if err != nil {
