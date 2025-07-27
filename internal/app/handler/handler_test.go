@@ -123,6 +123,7 @@ func TestHandler_handleGet(t *testing.T) {
 }
 
 func TestHandler_GetShortenURL(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	type fields struct {
 		URLShortenerService service.URLShortener
 	}
